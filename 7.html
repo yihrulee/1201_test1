@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物的運輸挑戰賽</title>
+    <style>
+        :root {
+            --primary-color: #2e5c3e;
+            --water-bg: linear-gradient(180deg, #a1c4fd 0%, #c2e9fb 100%);
+            --fish-size: 60px;
+            --bubble-size: 90px;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 防止遊戲中選取文字 */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--water-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- UI 介面區 --- */
+        #game-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* 增加一點底部邊距，確保不與遊戲區太近 */
+            padding-bottom: 20px;
+        }
+
+        #score-board {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        #question-box {
+            font-size: 1.4rem;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            max-width: 900px;
+            line-height: 1.5;
+            min-height: 3rem; /* 預留高度 */
+        }
+
+        /* 關鍵字顏色 */
+        .kw-blue { color: #2b6cb0; }
+        .kw-red { color: #c53030; }
+        .kw-green { color: #2e5c3e; }
+        .kw-orange { color: #d97706; }
+
+        /* --- 遊戲區域 --- */
+        #game-area {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            overflow: hidden;
+            cursor: none; /* 遊戲中隱藏滑鼠游標 */
+            /* 讓遊戲區內容往下偏移，避免被 Header 蓋住太嚴重 */
+            margin-top: 100px; 
+        }
+
+        /* 小魚 */
+        #player {
+            position: absolute;
+            width: var(--fish-size);
+            height: var(--fish-size);
+            font-size: 50px;
+            line-height: 1;
+            left: 50px;
+            top: 50%;
+            /* 【修改點 1】增加 scaleX(-1) 讓魚頭水平翻轉面向右邊，同時保持垂直居中 */
+            transform: scaleX(-1) translateY(-50%);
+            z-index: 5;
+            transition: top 0.1s ease-out; /* 讓鍵盤移動平滑 */
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
+        }
+
+        /* 答案泡泡 */
+        .bubble {
+            position: absolute;
+            padding: 15px;
+            background: white;
+            border: 3px solid #4a90e2;
+            border-radius: 50px;
+            color: #333;
+            font-weight: bold;
+            font-size: 1.1rem;
+            white-space: nowrap;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 特效 (愛心/鞭炮) */
+        .effect {
+            position: absolute;
+            font-size: 3rem;
+            z-index: 20;
+            animation: popUp 0.8s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0.5) translateY(0); opacity: 1; }
+            50% { transform: scale(1.2) translateY(-20px); opacity: 1; }
+            100% { transform: scale(1) translateY(-40px); opacity: 0; }
+        }
+
+        /* --- 頁面層 (開始/結束) --- */
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .overlay-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            border: 5px solid var(--primary-color);
+        }
+
+        h1 { color: var(--primary-color); margin-bottom: 20px; font-size: 2.5rem; }
+        h2 { color: #333; margin-bottom: 10px; }
+        p { font-size: 1.1rem; color: #555; line-height: 1.8; margin-bottom: 20px; }
+
+        .btn-start {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        /* --- 底部導覽列 --- */
+        footer {
+            background: #fff;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #ddd;
+            z-index: 101; /* 比 overlay 高 */
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .prev-btn { background-color: #f0f0f0; color: #333; border: 1px solid #ccc; }
+        .prev-btn:hover { background-color: #e0e0e0; }
+
+        .next-btn { background-color: var(--primary-color); color: white; }
+        .next-btn:hover { transform: translateY(-2px); background-color: #244a32; }
+
+        .next-btn.disabled {
+            background-color: #ccc;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-header">
+        <div id="score-board">
+            <span>得分: <span id="score-display">55</span></span>
+            <span>進度: <span id="progress-display">0/15</span></span>
+        </div>
+        <div id="question-box">準備好了嗎？</div>
+    </div>
+
+    <div id="game-area">
+        <div id="player">🐟</div>
+        </div>
+
+    <div id="start-screen" class="overlay-screen">
+        <div class="overlay-content">
+            <h1>植物的運輸挑戰賽</h1>
+            <p>
+                歡迎來到深海教室！<br>
+                請幫助小魚游向正確的答案。<br><br>
+                <strong>操作方式：</strong>使用「滑鼠游標」或鍵盤「↑ ↓」移動小魚。<br>
+                <strong>規則：</strong><br>
+                ✅ 答對：+3分 (出現愛心 ❤️)<br>
+                ❌ 答錯：-3分 (出現鞭炮 💥)<br>
+                💨 沒吃到：不計分<br>
+                <strong>基本分 55 分，共 15 題。</strong>
+            </p>
+            <button class="btn-start" onclick="startGame()">開始遊戲</button>
+        </div>
+    </div>
+
+    <div id="end-screen" class="overlay-screen" style="display: none;">
+        <div class="overlay-content">
+            <h1>遊戲結束</h1>
+            <h2>你的最終得分</h2>
+            <p style="font-size: 3rem; font-weight: bold; color: #c53030;" id="final-score">0</p>
+            <p id="feedback-text">恭喜完成挑戰！點擊右下角前往下一頁。</p>
+        </div>
+    </div>
+
+    <footer>
+        <a href="6.html" class="nav-btn prev-btn">← 上一頁</a>
+        <a href="./8.html" id="nextPageBtn" class="nav-btn next-btn disabled">下一頁 →</a>
+    </footer>
+
+    <script>
+        // --- 題庫資料 (15題) ---
+        const questions = [
+            { q: "植物體內負責運輸<span class='kw-blue'>水分</span>的構造是？", options: ["木質部", "韌皮部", "形成層"], ans: "木質部" },
+            { q: "植物體內負責運輸<span class='kw-orange'>養分</span>的構造是？", options: ["木質部", "韌皮部", "表皮細胞"], ans: "韌皮部" },
+            { q: "木質部運輸水分的方向通常為何？", options: ["由下往上", "由上往下", "雙向運輸"], ans: "由下往上" },
+            { q: "韌皮部運輸養分的方向為何？", options: ["僅由上往下", "僅由下往上", "雙向皆可"], ans: "雙向皆可" },
+            { q: "高大樹木水分向上運輸的主要<span class='kw-blue'>動力來源</span>是？", options: ["光合作用", "蒸散作用", "呼吸作用"], ans: "蒸散作用" },
+            { q: "控制氣孔開閉的細胞是？", options: ["表皮細胞", "葉肉細胞", "保衛細胞"], ans: "保衛細胞" },
+            { q: "雙子葉植物莖的維管束中，<span class='kw-green'>內側</span>的部分是？", options: ["木質部", "韌皮部", "形成層"], ans: "木質部" },
+            { q: "雙子葉植物莖的維管束中，<span class='kw-green'>外側</span>的部分是？", options: ["木質部", "韌皮部", "形成層"], ans: "韌皮部" },
+            { q: "根部增加吸收表面積的構造是？", options: ["根毛", "氣孔", "支根"], ans: "根毛" },
+            { q: "當保衛細胞<span class='kw-blue'>吸水膨脹</span>時，氣孔會？", options: ["關閉", "張開", "消失"], ans: "張開" },
+            { q: "形成年輪的主要原因是？", options: ["細胞生長速度不同", "受傷癒合", "水分多寡"], ans: "細胞生長速度不同" },
+            { q: "秋冬季節生長的木材顏色較深，原因是？", options: ["細胞小、壁厚", "細胞大、壁薄", "細胞含葉綠體"], ans: "細胞小、壁厚" },
+            { q: "將樹幹環狀剝皮會導致樹木死亡，是因切斷了何處？", options: ["木質部", "韌皮部", "形成層"], ans: "韌皮部" },
+            { q: "單子葉植物(如玉米)莖內維管束的排列方式為？", options: ["環狀排列", "散生排列", "十字排列"], ans: "散生排列" },
+            { q: "水分進入根部維管束的主要物理機制是？", options: ["擴散與滲透", "主動運輸", "蒸散作用"], ans: "擴散與滲透" }
+        ];
+
+        // --- 遊戲變數 ---
+        let currentScore = 55;
+        let questionIdx = 0;
+        let gameActive = false;
+        let animationFrameId;
+        let bubbles = []; 
+        let questionAnswered = false; 
+        
+        // DOM 元素
+        const player = document.getElementById('player');
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score-display');
+        const progressDisplay = document.getElementById('progress-display');
+        const questionBox = document.getElementById('question-box');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const finalScoreText = document.getElementById('final-score');
+        const nextBtn = document.getElementById('nextPageBtn');
+
+        // 小魚位置
+        let playerY = 300;
+        let targetY = 300; // 滑鼠目標位置
+
+        // --- 遊戲控制 ---
+        
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameActive = true;
+            currentScore = 55;
+            questionIdx = 0;
+            scoreDisplay.innerText = currentScore;
+            
+            shuffleArray(questions);
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('keydown', handleKeyDown);
+
+            loadQuestion();
+            gameLoop();
+        }
+
+        function loadQuestion() {
+            if (questionIdx >= questions.length) {
+                endGame();
+                return;
+            }
+
+            const qData = questions[questionIdx];
+            questionBox.innerHTML = qData.q;
+            progressDisplay.innerText = `${questionIdx + 1}/${questions.length}`;
+            questionAnswered = false;
+
+            bubbles.forEach(b => b.el.remove());
+            bubbles = [];
+
+            let options = qData.options.map(opt => ({
+                text: opt,
+                isCorrect: opt === qData.ans
+            }));
+            shuffleArray(options);
+
+            // 【修改點 2】調整泡泡垂直位置計算，避免與題目重疊
+            const areaHeight = gameArea.clientHeight;
+            const paddingTop = 120; // 頂部保留空間 (增加此值可讓選項更往下)
+            const usableHeight = areaHeight - paddingTop; // 實際可用於分布泡泡的高度
+            const segment = usableHeight / 3; // 將可用高度分為三段
+
+            options.forEach((opt, index) => {
+                const el = document.createElement('div');
+                el.className = 'bubble';
+                el.innerText = opt.text;
+                gameArea.appendChild(el);
+
+                const startX = gameArea.clientWidth + 50 + (Math.random() * 100); 
+                // 計算 Y 座標：頂部保留區 + 該段起始位置 + 該段居中偏移 - 泡泡自身半高修正
+                const startY = paddingTop + (segment * index) + (segment / 2) - 40; 
+
+                bubbles.push({
+                    el: el,
+                    x: startX,
+                    y: startY,
+                    speed: 3 + (questionIdx * 0.15) + (Math.random() * 1), 
+                    isCorrect: opt.isCorrect,
+                    active: true
+                });
+            });
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            const dy = targetY - playerY;
+            playerY += dy * 0.1; 
+            
+            const maxH = gameArea.clientHeight - 60;
+            if (playerY < 0) playerY = 0;
+            if (playerY > maxH) playerY = maxH;
+            
+            player.style.top = playerY + 'px';
+
+            let activeBubbleCount = 0;
+
+            bubbles.forEach(b => {
+                if (!b.active) return;
+
+                b.x -= b.speed;
+                b.el.style.left = b.x + 'px';
+                b.el.style.top = b.y + 'px';
+
+                if (b.x < -200) {
+                    b.active = false;
+                    b.el.remove();
+                } else {
+                    activeBubbleCount++;
+                }
+
+                if (!questionAnswered && isColliding(player, b.el)) {
+                    handleCollision(b);
+                }
+            });
+
+            if (questionAnswered || activeBubbleCount === 0) {
+                if (!window.isTransitioning) {
+                    window.isTransitioning = true;
+                    setTimeout(() => {
+                        questionIdx++;
+                        loadQuestion();
+                        window.isTransitioning = false;
+                    }, 500); 
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function handleCollision(bubble) {
+            questionAnswered = true; 
+            bubble.active = false;
+            bubble.el.style.display = 'none'; 
+
+            const rect = player.getBoundingClientRect();
+            const x = rect.left + 30;
+            const y = rect.top;
+
+            if (bubble.isCorrect) {
+                currentScore += 3;
+                showEffect('❤️', x, y);
+                player.innerText = '😋'; 
+            } else {
+                currentScore -= 3;
+                showEffect('💥', x, y);
+                player.innerText = '😵';
+            }
+
+            scoreDisplay.innerText = currentScore;
+            setTimeout(() => player.innerText = '🐟', 500);
+        }
+
+        function showEffect(emoji, x, y) {
+            const el = document.createElement('div');
+            el.className = 'effect';
+            el.innerText = emoji;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        function endGame() {
+            gameActive = false;
+            cancelAnimationFrame(animationFrameId);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('keydown', handleKeyDown);
+            
+            gameArea.style.cursor = 'default';
+
+            finalScoreText.innerText = currentScore;
+            endScreen.style.display = 'flex';
+
+            nextBtn.classList.remove('disabled');
+        }
+
+        // --- 工具函式 ---
+        
+        function handleMouseMove(e) {
+            const rect = gameArea.getBoundingClientRect();
+            targetY = e.clientY - rect.top - 30; 
+        }
+
+        function handleKeyDown(e) {
+            const step = 40;
+            if (e.key === 'ArrowUp') {
+                targetY -= step;
+            } else if (e.key === 'ArrowDown') {
+                targetY += step;
+            }
+        }
+
+        function isColliding(div1, div2) {
+            const rect1 = div1.getBoundingClientRect();
+            const rect2 = div2.getBoundingClientRect();
+
+            return !(rect1.right < rect2.left || 
+                     rect1.left > rect2.right || 
+                     rect1.bottom < rect2.top || 
+                     rect1.top > rect2.bottom);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+    </script>
+</body>
+</html>

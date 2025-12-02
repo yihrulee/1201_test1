@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物的運輸探索之旅</title>
+    <style>
+        /* CSS Reset 與 基本設定 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* 滿版設定 */
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            
+            /* 柔和的植物系漸層背景 */
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            background-color: #f0fdf4; /* 備用背景色 */
+            
+            /* 字體設定 */
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            color: #2e5c3e; /* 深綠色文字 */
+
+            /* Flexbox 置中排版 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* 標題樣式 */
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            letter-spacing: 2px;
+        }
+
+        /* 副標題樣式 */
+        p.subtitle {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 3rem;
+            color: #4a7c59;
+        }
+
+        /* 按鈕容器樣式 */
+        .btn-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            outline: none; /* 移除預設藍色外框，改用下方自訂樣式 */
+            border-radius: 12px;
+        }
+
+        /* 按鈕互動效果 */
+        .btn-container:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+        }
+
+        .btn-container:active {
+            transform: scale(0.95);
+        }
+
+        /* 鍵盤 Focus 樣式 (無障礙設計) */
+        .btn-container:focus {
+            box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.5);
+        }
+
+        /* 圖片樣式 */
+        .btn-container img {
+            display: block;
+            max-width: 80vw;  /* 避免手機版圖片過大 */
+            max-height: 50vh;
+            border-radius: 12px;
+            /* 如果圖片不存在，顯示替代色塊以利辨識 */
+            background-color: #ddd; 
+            min-width: 200px;
+            min-height: 200px;
+            object-fit: contain;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>植物的運輸探索之旅</h1>
+    
+    <p class="subtitle">揭開維管束與水分養分輸送的奧秘</p>
+
+    <div class="btn-container" id="startBtn" tabindex="0" role="button" aria-label="開始探索">
+        <img src="0.png" alt="點擊開始 (請確保 0.png 存在)">
+    </div>
+
+    <script>
+        // 取得按鈕元素
+        const btn = document.getElementById('startBtn');
+
+        // 跳轉函式
+        function navigate() {
+            window.location.href = '1.html';
+        }
+
+        // 1. 滑鼠點擊事件
+        btn.addEventListener('click', navigate);
+
+        // 2. 鍵盤事件 (Enter 或 Space)
+        btn.addEventListener('keydown', function(event) {
+            // 檢查是否按下 Enter (Code: Enter) 或 空白鍵 (Code: Space)
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault(); // 防止空白鍵造成頁面滾動
+                navigate();
+            }
+        });
+
+        // 自動聚焦在按鈕上，方便直接操作（可選）
+        btn.focus();
+    </script>
+</body>
+</html>

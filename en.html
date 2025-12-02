@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>探究實驗學習單：過氧化氫酶活性探討</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* 主要容器：A4 寬度模擬 */
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h1 { text-align: center; border-bottom: none; margin-bottom: 30px; }
+
+        /* 第一部分：學生資訊 */
+        .student-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            background-color: #e8f6f3;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        /* 第二部分：實驗說明 */
+        .intro-section p {
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        /* 第三部分：數據與圖表 (左右排版) */
+        .data-chart-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: stretch; /* 等高 */
+        }
+
+        .data-table-section {
+            flex: 1; /* 佔 1/3 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .chart-section {
+            flex: 2; /* 佔 2/3 */
+            background-color: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 300px;
+        }
+
+        /* 表格樣式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .data-input {
+            width: 80%;
+            text-align: center;
+        }
+
+        /* 第四~六部分：討論問題 */
+        .discussion-section {
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .discussion-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        .question-block {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 60px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        /* 按鈕區 */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-img { background-color: #27ae60; }
+        .btn-pdf { background-color: #e74c3c; }
+
+        .btn:hover { opacity: 0.9; }
+
+        /* iPad 說明區 */
+        .ipad-instructions {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        /* RWD: 手機版調整為垂直排列 */
+        @media (max-width: 768px) {
+            .data-chart-container {
+                flex-direction: column;
+            }
+            .data-table-section, .chart-section {
+                flex: auto;
+                width: 100%;
+            }
+            .student-info {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="worksheet">
+        <h1>生物探究實驗學習單：過氧化氫酶活性</h1>
+
+        <div class="student-info">
+            <div class="input-group">
+                <label>班級：</label>
+                <input type="text" id="class-input" placeholder="例如: 801">
+            </div>
+            <div class="input-group">
+                <label>座號：</label>
+                <input type="text" id="seat-input" placeholder="例如: 05">
+            </div>
+            <div class="input-group">
+                <label>姓名：</label>
+                <input type="text" id="name-input" placeholder="例如: 王小明">
+            </div>
+        </div>
+
+        <div class="intro-section">
+            <h2>二、實驗目的與原理</h2>
+            <p>
+                <strong>實驗目的：</strong>探討不同生物組織、溫度及酸鹼度對酵素（過氧化氫酶）活性的影響。<br>
+                <strong>科學原理：</strong>生物體內含有過氧化氫酶（Catalase），能將有毒的雙氧水（過氧化氫 $H_2O_2$）分解為水和氧氣。反應式為：$2H_2O_2 \rightarrow 2H_2O + O_2 \uparrow$。本實驗藉由測量氧氣產生的多寡（泡沫高度或排水集氣量），來推論酵素在不同環境下的活性強弱。
+            </p>
+        </div>
+
+        <h2>三、實驗數據紀錄與統計</h2>
+        <div class="data-chart-container">
+            <div class="data-table-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>試管編號 / 處理</th>
+                            <th>氧氣產生量 (mL)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1. 酵母菌</td>
+                            <td><input type="number" class="data-input" id="val1" oninput="updateChart()"></td>
+                        </tr>
+                        <tr>
+                            <td>2. 煮沸的金針菇</td>
+                            <td><input type="number" class="data-input" id="val2" oninput="updateChart()"></td>
+                        </tr>
+                        <tr>
+                            <td>3. 新鮮的金針菇</td>
+                            <td><input type="number" class="data-input" id="val3" oninput="updateChart()"></td>
+                        </tr>
+                        <tr>
+                            <td>4. 紅蘿蔔 (無酸)</td>
+                            <td><input type="number" class="data-input" id="val4" oninput="updateChart()"></td>
+                        </tr>
+                        <tr>
+                            <td>5. 紅蘿蔔 (加酸)</td>
+                            <td><input type="number" class="data-input" id="val5" oninput="updateChart()"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="chart-section">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+
+        <div class="discussion-section">
+            <div class="discussion-title">四、討論問題 (I)：比較第 2 支與第 3 支試管 (金針菇組)</div>
+            <div class="question-block">
+                <label>(1) 操作變因是甚麼？</label>
+                <textarea placeholder="例如：溫度的處理（煮沸與否）..."></textarea>
+            </div>
+            <div class="question-block">
+                <label>(2) 請寫出實驗結果：</label>
+                <textarea placeholder="例如：新鮮金針菇產生大量氧氣，煮沸的則..."></textarea>
+            </div>
+            <div class="question-block">
+                <label>(3) 請解釋此實驗結果的可能原因：</label>
+                <textarea placeholder="例如：酵素主要成分為蛋白質，煮沸高溫會導致..."></textarea>
+            </div>
+        </div>
+
+        <div class="discussion-section">
+            <div class="discussion-title">五、討論問題 (II)：比較第 4 支與第 5 支試管 (紅蘿蔔組)</div>
+            <div class="question-block">
+                <label>(1) 操作變因是甚麼？</label>
+                <textarea placeholder="例如：酸鹼值（是否加入檸檬酸）..."></textarea>
+            </div>
+            <div class="question-block">
+                <label>(2) 請寫出實驗結果：</label>
+                <textarea placeholder="例如：未加酸的紅蘿蔔氣泡較多，加酸後的..."></textarea>
+            </div>
+            <div class="question-block">
+                <label>(3) 請解釋此實驗結果的可能原因：</label>
+                <textarea placeholder="例如：酵素具有特定的最佳酸鹼值範圍，過酸環境會..."></textarea>
+            </div>
+        </div>
+
+        <div class="discussion-section">
+            <div class="discussion-title">六、討論問題 (III)：比較第 1、3 支與第 4 支試管 (不同生物)</div>
+            <div class="question-block">
+                <label>(1) 操作變因是甚麼？</label>
+                <textarea placeholder="例如：生物種類（酵素來源的不同）..."></textarea>
+            </div>
+            <div class="question-block">
+                <label>(2) 請寫出實驗結果：</label>
+                <textarea placeholder="例如：不同生物組織產生的氧氣量不同..."></textarea>
+            </div>
+            <div class="question-block">
+                <label>(3) 請解釋此實驗結果的可能原因：</label>
+                <textarea placeholder="例如：不同生物體內含有的酵素濃度或活性可能不同..."></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn btn-img" onclick="downloadImage()">下載完成的學習單圖片</button>
+        <button class="btn btn-pdf" onclick="downloadPDF()">下載完成的學習單PDF（A4 自動分頁）</button>
+    </div>
+
+    <div class="container ipad-instructions">
+        <h3>📱 使用 iPad 時如何儲存 PDF？</h3>
+        <p>如果您使用 iPad，按下「下載 PDF」後，PDF 會在新分頁開啟，請依照下列步驟儲存檔案：</p>
+        <ol>
+            <li>等待 PDF 在新分頁開啟。</li>
+            <li>點右上角的 <strong>「分享」按鈕</strong>（方框＋上箭頭）。</li>
+            <li>選擇 <strong>「儲存到檔案」</strong>。</li>
+            <li>檔名請輸入 <strong>【班級座號姓名】</strong>（例如：80115王小明）。</li>
+            <li>選擇「儲存」。</li>
+        </ol>
+        <p>完成後即可將 PDF 上傳給老師！</p>
+    </div>
+
+    <script>
+        // --- 1. 初始化圖表 ---
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const initialData = [0, 0, 0, 0, 0];
+        
+        const myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['1.酵母菌', '2.煮沸金針菇', '3.新鮮金針菇', '4.紅蘿蔔(無酸)', '5.紅蘿蔔(加酸)'],
+                datasets: [{
+                    label: '氧氣產生量 (mL)',
+                    data: initialData,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)', // 藍
+                        'rgba(255, 99, 132, 0.6)', // 紅
+                        'rgba(75, 192, 192, 0.6)', // 綠
+                        'rgba(255, 206, 86, 0.6)', // 黃
+                        'rgba(153, 102, 255, 0.6)' // 紫
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '氧氣體積 (mL)',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '試管處理組別',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '各組實驗氧氣產生量統計圖',
+                        font: { size: 18 }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // --- 2. 數據更新邏輯 ---
+        function updateChart() {
+            const v1 = document.getElementById('val1').value || 0;
+            const v2 = document.getElementById('val2').value || 0;
+            const v3 = document.getElementById('val3').value || 0;
+            const v4 = document.getElementById('val4').value || 0;
+            const v5 = document.getElementById('val5').value || 0;
+
+            myChart.data.datasets[0].data = [v1, v2, v3, v4, v5];
+            myChart.update();
+        }
+
+        // --- 3. 取得檔名 helper ---
+        function getFilename() {
+            const cls = document.getElementById('class-input').value.trim();
+            const seat = document.getElementById('seat-input').value.trim();
+            const name = document.getElementById('name-input').value.trim();
+            
+            if(cls && seat && name) {
+                return `${cls}_${seat}_${name}`;
+            }
+            return '生物實驗學習單';
+        }
+
+        // --- 4. 下載圖片功能 ---
+        function downloadImage() {
+            // 強制捲動到頂部以免截圖跑版
+            window.scrollTo(0,0);
+            
+            const element = document.getElementById('worksheet');
+            
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = getFilename() + '.png';
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+
+        // --- 5. 下載 PDF 功能 (自動分頁處理) ---
+        function downloadPDF() {
+            window.scrollTo(0,0);
+            const element = document.getElementById('worksheet');
+            const { jsPDF } = window.jspdf;
+
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                
+                // 初始化 PDF (A4 縱向, 單位 mm)
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = 210;
+                const pdfHeight = 297;
+                
+                // 圖片在 PDF 中的尺寸
+                const imgProps = pdf.getImageProperties(imgData);
+                const imgWidth = pdfWidth; 
+                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+                
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                // 第一頁
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+
+                // 如果還有內容，新增頁面
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+                }
+
+                pdf.save(getFilename() + '.pdf');
+            });
+        }
+    </script>
+</body>
+</html>

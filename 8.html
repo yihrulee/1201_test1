@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影響蒸散作用因素探討 - 虛擬實驗</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --liquid-color: #ff4d4d;
+            --bg-color: #f5f5f5;
+            --disabled-gray: #ccc;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 80px; /* 留給 footer 的空間 */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 { text-align: center; color: var(--primary-color); }
+
+        /* 學生資料區 */
+        .student-info {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .student-info div { display: flex; align-items: center; gap: 5px; }
+        .student-info input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+
+        /* 實驗區 */
+        .experiment-stage {
+            display: flex; justify-content: center; gap: 80px; margin: 40px 0; position: relative;
+        }
+        .group-container { display: flex; flex-direction: column; align-items: center; }
+        .label { font-weight: bold; margin-top: 10px; font-size: 1.1em; }
+
+        /* 量筒與芹菜樣式 */
+        .cylinder {
+            width: 60px; height: 250px;
+            border: 2px solid #888; border-top: none; border-radius: 0 0 10px 10px;
+            position: relative;
+            background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+            overflow: hidden;
+        }
+        .tick { position: absolute; right: 0; height: 1px; background: #888; width: 10px; }
+        .liquid {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 200px;
+            background-color: var(--liquid-color); opacity: 0.8; transition: height 5s ease-in-out;
+        }
+        .celery-container {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 2; pointer-events: none;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            display: block; margin: 20px auto; padding: 12px 30px; font-size: 1.2rem;
+            background-color: var(--primary-color); color: white;
+            border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn:hover { background-color: #1b5e20; transform: scale(1.05); }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+
+        /* 結果區 */
+        #results-section { display: none; margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 20px; }
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #f2f2f2; }
+
+        /* 問題區 */
+        .questions-section { margin-top: 40px; }
+        .question-box {
+            margin-bottom: 25px; background: #fff; padding: 15px;
+            border-left: 5px solid var(--primary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .question-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; }
+        textarea {
+            width: 100%; height: 80px; padding: 10px;
+            border: 1px solid #ccc; border-radius: 5px;
+            resize: vertical; font-family: inherit;
+        }
+
+        /* 提交按鈕區 */
+        .submit-area {
+            text-align: center; margin-top: 30px; padding: 20px;
+            background: #fff3e0; border-radius: 10px;
+        }
+
+        /* 底部導覽列 */
+        footer {
+            background: #fff; padding: 1rem 2rem; display: flex;
+            justify-content: space-between; align-items: center;
+            border-top: 1px solid #ddd;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100;
+        }
+        .nav-btn {
+            text-decoration: none; padding: 10px 24px; border-radius: 30px;
+            font-weight: bold; transition: all 0.3s; font-size: 1rem;
+        }
+        .prev-btn { background-color: #f0f0f0; color: #333; border: 1px solid #ccc; }
+        .prev-btn:hover { background-color: #e0e0e0; }
+        .next-btn { background-color: var(--primary-color); color: white; }
+        .next-btn:hover { transform: translateY(-2px); background-color: #1b5e20; }
+        .next-btn.disabled { background-color: var(--disabled-gray); pointer-events: none; opacity: 0.7; }
+
+        /* Loading Mask */
+        #loadingMask {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8); z-index: 999;
+            display: none; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .spinner {
+            border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
+            border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) { .results-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>影響蒸散作用因素探討</h1>
+    
+    <div class="student-info">
+        <div>
+            <label>班級：</label>
+            <input type="text" id="class-input" placeholder="例如: 701">
+        </div>
+        <div>
+            <label>座號：</label>
+            <input type="text" id="seat-input" placeholder="例如: 05">
+        </div>
+        <div>
+            <label>姓名：</label>
+            <input type="text" id="name-input" placeholder="請輸入姓名">
+        </div>
+    </div>
+
+    <div class="experiment-stage">
+        <div class="group-container">
+            <div class="cylinder">
+                <div class="tick" style="bottom: 200px;"></div>
+                <div class="tick" style="bottom: 180px;"></div>
+                <div class="tick" style="bottom: 160px;"></div>
+                <div class="tick" style="bottom: 140px;"></div>
+                <div class="tick" style="bottom: 120px;"></div>
+                <div class="celery-container">
+                    <svg width="50" height="240" viewBox="0 0 50 240">
+                        <rect x="20" y="40" width="10" height="200" fill="#7cb342" />
+                        <path d="M20 40 Q 5 10 20 0 Q 35 10 25 40" fill="#43a047" />
+                        <path d="M25 60 Q 50 30 50 10 Q 30 30 25 60" fill="#43a047" />
+                        <path d="M20 50 Q -5 20 0 0 Q 15 20 20 50" fill="#43a047" />
+                    </svg>
+                </div>
+                <div class="liquid" id="liquid-leaves"></div>
+            </div>
+            <div class="label">有葉組</div>
+        </div>
+
+        <div class="group-container">
+            <div class="cylinder">
+                <div class="tick" style="bottom: 200px;"></div>
+                <div class="tick" style="bottom: 180px;"></div>
+                <div class="tick" style="bottom: 160px;"></div>
+                <div class="tick" style="bottom: 140px;"></div>
+                <div class="tick" style="bottom: 120px;"></div>
+                <div class="celery-container">
+                    <svg width="50" height="240" viewBox="0 0 50 240">
+                        <rect x="20" y="40" width="10" height="200" fill="#7cb342" />
+                        <ellipse cx="25" cy="40" rx="5" ry="2" fill="#aed581" />
+                    </svg>
+                </div>
+                <div class="liquid" id="liquid-no-leaves"></div>
+            </div>
+            <div class="label">無葉組</div>
+        </div>
+    </div>
+
+    <button class="btn" id="start-btn" onclick="startExperiment()">開始實驗</button>
+    <p id="status-text" style="text-align: center; color: #666;">請點擊按鈕開始實驗...</p>
+
+    <div id="results-section">
+        <h2>實驗結果分析</h2>
+        <div class="results-grid">
+            <div>
+                <h3>數據統計表</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>組別</th>
+                            <th>初始水量 (mL)</th>
+                            <th>結束水量 (mL)</th>
+                            <th>液面散失水量 (mL)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>有葉組</td>
+                            <td>10.0</td>
+                            <td id="res-leaves-final">--</td>
+                            <td id="res-leaves-loss" style="color: #d32f2f; font-weight: bold;">--</td>
+                        </tr>
+                        <tr>
+                            <td>無葉組</td>
+                            <td>10.0</td>
+                            <td id="res-no-leaves-final">--</td>
+                            <td id="res-no-leaves-loss" style="color: #d32f2f; font-weight: bold;">--</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div>
+                <h3>水分散失量比較圖</h3>
+                <canvas id="resultChart"></canvas>
+            </div>
+        </div>
+
+        <div class="questions-section">
+            <h2>實驗問題與討論</h2>
+            
+            <div class="question-box">
+                <div class="question-title">1. 請寫出實驗目的：</div>
+                <textarea id="q1" placeholder="探討..."></textarea>
+            </div>
+
+            <div class="question-box">
+                <div class="question-title">2. 請寫出實驗假設：</div>
+                <textarea id="q2" placeholder="如果...則..."></textarea>
+            </div>
+
+            <div class="question-box">
+                <div class="question-title">3. 請寫出操作變因（實驗組與對照組唯一的不同）：</div>
+                <textarea id="q3" placeholder="例如：有無..."></textarea>
+            </div>
+
+            <div class="question-box">
+                <div class="question-title">4. 請寫出應變變因（我們測量的結果）：</div>
+                <textarea id="q4" placeholder="例如：液面..."></textarea>
+            </div>
+
+            <div class="question-box">
+                <div class="question-title">5. 根據實驗資料，請寫出實驗結果（描述數據）：</div>
+                <textarea id="q5" placeholder="有葉組散失了...，無葉組散失了..."></textarea>
+            </div>
+
+            <div class="question-box">
+                <div class="question-title">6. 請寫出實驗結論：</div>
+                <textarea id="q6" placeholder="根據結果可知，植物的蒸散作用主要與...有關"></textarea>
+            </div>
+            
+            <div class="submit-area">
+                <button class="btn" id="submit-btn" onclick="submitToCloud()" style="background-color: #d84315;">提交實驗報告</button>
+                <p style="color: #666; font-size: 0.9rem;">(需填寫基本資料並回答所有問題後才可提交)</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn" id="view-results-btn" onclick="showResults()" style="display: none; background-color: #f57c00;">觀看實驗結果</button>
+
+</div>
+
+<footer>
+    <a href="7.html" class="nav-btn prev-btn">← 上一頁</a>
+    <a href="./index.html" id="nextPageBtn" class="nav-btn next-btn disabled">課程結束 →</a>
+</footer>
+
+<div id="loadingMask">
+    <div class="spinner"></div>
+    <p style="margin-top:10px; font-weight:bold;">報告上傳中，請稍候...</p>
+</div>
+
+<script>
+    // ==========================================
+    // 您的 Google Apps Script 網址
+    // ==========================================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3b7W5Hw12be70xaPjNJ717BVG4JsQPA6lXalPYqmVffJy8qySWybEf865xTfArnrOpg/exec'; 
+
+    // 實驗參數
+    const initialHeight = 200; 
+    const finalHeightLeaves = 150; 
+    const finalHeightNoLeaves = 196; 
+    const dataInitial = 10.0;
+    const dataFinalLeaves = 7.5;
+    const dataFinalNoLeaves = 9.8;
+
+    function startExperiment() {
+        const btn = document.getElementById('start-btn');
+        const status = document.getElementById('status-text');
+        const liqL = document.getElementById('liquid-leaves');
+        const liqNL = document.getElementById('liquid-no-leaves');
+
+        btn.disabled = true;
+        btn.textContent = "實驗進行中...";
+        status.textContent = "正在模擬 5 小時後的變化 (加速為 5 秒)...";
+
+        liqL.style.height = finalHeightLeaves + 'px';
+        liqNL.style.height = finalHeightNoLeaves + 'px';
+
+        setTimeout(() => {
+            btn.textContent = "實驗結束";
+            status.textContent = "實驗已完成，請點擊下方按鈕分析數據。";
+            document.getElementById('view-results-btn').style.display = 'block';
+        }, 5000);
+    }
+
+    function showResults() {
+        const resultSection = document.getElementById('results-section');
+        const viewBtn = document.getElementById('view-results-btn');
+        
+        resultSection.style.display = 'block';
+        viewBtn.style.display = 'none';
+
+        document.getElementById('res-leaves-final').textContent = dataFinalLeaves.toFixed(1);
+        document.getElementById('res-leaves-loss').textContent = (dataInitial - dataFinalLeaves).toFixed(1);
+
+        document.getElementById('res-no-leaves-final').textContent = dataFinalNoLeaves.toFixed(1);
+        document.getElementById('res-no-leaves-loss').textContent = (dataInitial - dataFinalNoLeaves).toFixed(1);
+
+        resultSection.scrollIntoView({ behavior: 'smooth' });
+        renderChart();
+    }
+
+    function renderChart() {
+        const ctx = document.getElementById('resultChart').getContext('2d');
+        const lossLeaves = dataInitial - dataFinalLeaves;
+        const lossNoLeaves = dataInitial - dataFinalNoLeaves;
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['有葉組', '無葉組'],
+                datasets: [{
+                    label: '液面散失的水量 (mL)',
+                    data: [lossLeaves, lossNoLeaves],
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '水量散失 (mL)' } }
+                },
+                plugins: { legend: { display: false }, title: { display: true, text: '有無葉片對蒸散作用的影響' } }
+            }
+        });
+    }
+
+    function submitToCloud() {
+        // 1. 收集資料
+        const cls = document.getElementById('class-input').value.trim();
+        const seat = document.getElementById('seat-input').value.trim();
+        const name = document.getElementById('name-input').value.trim();
+        const q1 = document.getElementById('q1').value.trim();
+        const q2 = document.getElementById('q2').value.trim();
+        const q3 = document.getElementById('q3').value.trim();
+        const q4 = document.getElementById('q4').value.trim();
+        const q5 = document.getElementById('q5').value.trim();
+        const q6 = document.getElementById('q6').value.trim();
+
+        // 2. 驗證所有欄位
+        if (!cls || !seat || !name) {
+            alert('請完整填寫最上方的班級、座號、姓名！');
+            document.querySelector('.student-info').scrollIntoView({behavior: "smooth"});
+            return;
+        }
+        if (!q1 || !q2 || !q3 || !q4 || !q5 || !q6) {
+            alert('請回答所有實驗問題後再提交！');
+            return;
+        }
+
+        // 3. 準備上傳
+        document.getElementById('loadingMask').style.display = 'flex';
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+
+        const payload = {
+            className: cls,
+            seatNo: seat,
+            studentName: name,
+            q1: q1, q2: q2, q3: q3, q4: q4, q5: q5, q6: q6
+        };
+
+        // 4. 發送請求
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingMask').style.display = 'none';
+            if (data.result === 'success') {
+                alert('報告提交成功！恭喜完成所有課程。');
+                submitBtn.textContent = "已提交";
+                
+                // 解鎖下一頁按鈕
+                document.getElementById('nextPageBtn').classList.remove('disabled');
+                // 自動滾動到底部
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            } else {
+                alert('上傳失敗：' + JSON.stringify(data));
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            document.getElementById('loadingMask').style.display = 'none';
+            console.error('Error:', error);
+            alert('發生連線錯誤，請檢查網路。');
+            submitBtn.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>

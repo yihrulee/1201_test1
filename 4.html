@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年輪的故事 - 樹輪年代學</title>
+    <style>
+        :root {
+            --primary-green: #2e5c3e;
+            --secondary-green: #4a7c59;
+            --highlight-time: #c53030;   /* 時間/年代 - 紅 */
+            --highlight-name: #2b6cb0;   /* 人名 - 藍 */
+            --highlight-concept: #059669; /* 概念 - 綠 */
+            --bg-color: #fdfbfb;
+            --disabled-gray: #ccc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: #333;
+            line-height: 1.8;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 頂部標題 */
+        header {
+            background: var(--primary-green);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        /* 學生資料輸入區 */
+        .student-info {
+            background: #e6f5e8;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .student-info input {
+            padding: 10px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            width: 150px;
+            font-size: 1rem;
+        }
+        
+        .student-info label {
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+
+        /* 主要內容容器 */
+        main {
+            max-width: 1100px;
+            width: 95%;
+            margin: 2rem auto;
+            flex: 1; 
+        }
+
+        /* 雙欄排版區塊 (左文右題) */
+        .section-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 3rem;
+            gap: 30px;
+            padding-bottom: 2rem;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        /* 最後一段不需要分隔線 */
+        .section-row:last-of-type {
+            border-bottom: none;
+        }
+
+        /* 手機版垂直排列 */
+        @media (max-width: 850px) {
+            .section-row {
+                flex-direction: column;
+            }
+            .text-col, .question-col {
+                width: 100%;
+                border-left: none;
+                padding-left: 0;
+            }
+            .question-col {
+                border-top: 4px solid var(--secondary-green);
+                padding-top: 1rem;
+            }
+        }
+
+        .text-col {
+            flex: 6; /* 60% 寬度 */
+        }
+
+        .question-col {
+            flex: 4; /* 40% 寬度 */
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--secondary-green);
+        }
+
+        h3.q-title {
+            color: var(--primary-green);
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        /* 關鍵字高亮 */
+        .kw-time { color: var(--highlight-time); font-weight: bold; }
+        .kw-name { color: var(--highlight-name); font-weight: bold; }
+        .kw-concept { color: var(--highlight-concept); font-weight: bold; }
+
+        /* 輸入框與按鈕 */
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .hint-box {
+            background-color: #f9f9f9;
+            padding: 10px;
+            font-size: 0.9rem;
+            color: #555;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: none; /* 預設隱藏 */
+            border-left: 3px solid #ffd700;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            margin-right: 5px;
+        }
+
+        .btn-hint {
+            background-color: #e2e8f0;
+            color: #333;
+        }
+        
+        /* 暫存按鈕 */
+        .btn-temp-save {
+            background-color: var(--secondary-green);
+            color: white;
+        }
+        
+        .btn-temp-save:disabled {
+            background-color: #999;
+            cursor: default;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: var(--primary-green);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* 圖片並排區塊 */
+        .image-gallery {
+            display: flex;
+            width: 100%;
+            gap: 15px;
+            margin-bottom: 3rem;
+        }
+
+        .image-gallery img {
+            width: 50%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 提交區塊 */
+        .submit-section {
+            text-align: center;
+            margin: 40px 0;
+            padding: 20px;
+            background: #fff;
+            border: 2px solid var(--primary-green);
+            border-radius: 10px;
+            display: none; /* 預設隱藏，全部答完才顯示 */
+            animation: fadeIn 0.5s;
+        }
+
+        .btn-upload {
+            background-color: #d97706; /* 橘色 */
+            color: white;
+            font-size: 1.2rem;
+            padding: 12px 30px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-upload:hover {
+            background-color: #b76406;
+            transform: translateY(-2px);
+        }
+        .btn-upload:disabled {
+            background-color: #ccc;
+            transform: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 底部導覽列 */
+        footer {
+            background: #fff;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #ddd;
+            position: sticky;
+            bottom: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .prev-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        .prev-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .next-btn {
+            background-color: var(--primary-green);
+            color: white;
+            box-shadow: 0 4px 10px rgba(46, 92, 62, 0.3);
+        }
+        .next-btn:hover {
+            transform: translateY(-2px);
+            background-color: #244a32;
+        }
+
+        .next-btn.disabled {
+            background-color: var(--disabled-gray);
+            pointer-events: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+        
+        /* Loading Mask */
+        #loadingMask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-green);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>年輪的故事 - 樹輪年代學</h1>
+</header>
+
+<div class="student-info">
+    <label>班級：</label>
+    <input type="text" id="studentClass" placeholder="例如: 701">
+    
+    <label>座號：</label>
+    <input type="text" id="studentSeat" placeholder="例如: 05">
+    
+    <label>姓名：</label>
+    <input type="text" id="studentName" placeholder="請輸入姓名">
+</div>
+
+<main>
+
+    <div class="section-row">
+        <div class="text-col">
+            <p>
+                近些年來世界古典提琴拍賣價格驚人，讓人們看到了收藏的價值。如阿馬蒂家族、<span class="kw-name">安東尼奧·斯特拉迪瓦里</span>、瓜爾內裡家族、施泰納、瓜達尼尼等著名提琴大師製作的提琴價格是非常昂貴。而這些名琴幾乎都是在<span class="kw-time">十八世紀初(西元1690年至西元1750年)</span>製作完成的。
+            </p>
+        </div>
+        <div class="question-col">
+            <h3 class="q-title">討論問題 1</h3>
+            <p>為什麼目前認為最好的提琴皆是在西元1690年至西元1750年製作完成的，以我們現代的科學與工藝，製作不出更好的琴嗎?</p>
+            
+            <button class="btn btn-hint" onclick="toggleHint('h1')">💡 提示/方向</button>
+            <div id="h1" class="hint-box">
+                建議方向：思考一下「木材的品質」與當時的「氣候環境」是否有關聯？現代工藝雖進步，但能否複製當年的「天然原料」？
+            </div>
+            
+            <textarea id="ans1" placeholder="請在此輸入你的看法..."></textarea>
+            <button class="btn btn-temp-save" id="btn1" onclick="tempSave('1')">完成本題</button>
+            <span class="status-badge" id="badge1">已記錄 ✓</span>
+        </div>
+    </div>
+
+    <div class="section-row">
+        <div class="text-col">
+            <p>
+                關於這個問題，科學家也提出了不同的看法。這是一個跟「<span class="kw-concept">年輪(樹輪)</span>」有關的故事。<span class="kw-time">1984年</span>，天文學家帕西瓦爾·羅威爾指派天文學家<span class="kw-name">安德魯·道格拉斯（A. E. Douglass）</span>，前往亞利桑那州旗竿市建立天文台。道格拉斯發現用來建造天文臺的木材，橫剖面上有個相同寬度的樹輪，身為天文學家的他，為了證實<span class="kw-concept">太陽黑子</span>活動是以11年為周期，意外發現當地樹輪寬窄形態也有著11年週期類似的變化，故而聯想到樹輪可能反應出氣候變化，因而建立樹輪學的基本原理與方法，開始了樹輪相關的系統研究，奠定了當代的<span class="kw-concept">樹輪年代學</span>的基礎。
+            </p>
+            <p>
+                科學家發現，大約在<span class="kw-time">1645年至1715年</span>，當時的太陽黑子活動非常罕見，而我們從近一千年地表氣溫變化的資料來看，約在<span class="kw-time">1650年至1750年間</span>，全球氣溫出現下降的現象，這段時間，<span class="kw-concept">樹木生長緩慢，樹輪顏色較深，質地緊密材質強韌</span>，正是製作提琴最好的材料。即使現在太陽黑子也是處於活動罕見時期，但是地表溫度卻不見下降，所以，即使我們現在擁有更高科技與藝術，我們也沒有那麼適合的木材材質來製作提琴了。
+            </p>
+        </div>
+        <div class="question-col">
+            <h3 class="q-title">討論問題 2</h3>
+            <p>為什麼一樣處於太陽黑子活動罕見時期，現今的溫度卻沒有與西元1650年至1750年間一樣低溫呢?</p>
+            
+            <button class="btn btn-hint" onclick="toggleHint('h2')">💡 提示/方向</button>
+            <div id="h2" class="hint-box">
+                建議方向：除了太陽活動外，現代人類活動（如工業革命後排放的氣體）是否對氣溫造成了更大的影響（例如溫室效應）？
+            </div>
+            
+            <textarea id="ans2" placeholder="請在此輸入你的看法..."></textarea>
+            <button class="btn btn-temp-save" id="btn2" onclick="tempSave('2')">完成本題</button>
+            <span class="status-badge" id="badge2">已記錄 ✓</span>
+        </div>
+    </div>
+
+    <div class="image-gallery">
+        <img src="4_1.png" alt="樹輪與氣候示意圖1 (請確保 4_1.png 存在)">
+        <img src="4_2.png" alt="樹輪與氣候示意圖2 (請確保 4_2.png 存在)">
+    </div>
+
+    <div class="section-row">
+        <div class="text-col">
+            <p>
+                其實，道格拉斯並非史上第一個研究樹輪的科學家，在<span class="kw-time">西元1500年</span>，廣博多學的<span class="kw-name">李奧納多·達文西（Leonardo da Vinci）</span>就曾指出樹輪數目可以代表這棵樹的年齡，而樹輪寬窄與其形成時期的氣候之間有著密切關係，因此他還以樹輪寬度來推論當地歷年降雨的情形。
+            </p>
+        </div>
+        <div class="question-col">
+            <h3 class="q-title">討論問題 3</h3>
+            <p>木材與樹輪在我們的生活中天天可見，從李奧納多·達文西的發現一直到道格拉斯研究發現，這中間經過了500年，這500年間似乎是樹輪研究的斷層時期，為什麼這500年間，沒有人去從事樹輪的研究呢?</p>
+            
+            <button class="btn btn-hint" onclick="toggleHint('h3')">💡 提示/方向</button>
+            <div id="h3" class="hint-box">
+                建議方向：可以思考科學發展的「主流」是什麼？以前的人可能更關注天文、物理或醫學。另外，資訊傳播的限制（達文西的手稿是否被廣泛閱讀？）也是可能原因。
+            </div>
+            
+            <textarea id="ans3" placeholder="請在此輸入你的看法..."></textarea>
+            <button class="btn btn-temp-save" id="btn3" onclick="tempSave('3')">完成本題</button>
+            <span class="status-badge" id="badge3">已記錄 ✓</span>
+        </div>
+    </div>
+
+    <div class="section-row" style="border:none;">
+        <div class="text-col" style="flex: 1;">
+            <p>
+                <span class="kw-time">1914年</span>，來自美國自然史博物館的克拉克·韋士勒找上道格拉斯，希望能用年輪定年的方法來估計美國西南方原住民遺址的年代，這項成功的計畫延續15年。除了用來研究氣候變化的模式和考古遺跡的年代，樹輪年代學還可以用來推估冰河移動和火山噴發的時間。
+            </p>
+        </div>
+    </div>
+
+    <div class="submit-section" id="submitSection">
+        <h3>🎉 恭喜完成所有問題！</h3>
+        <p>請確認上方基本資料（班級、座號、姓名）無誤，然後點擊下方按鈕上傳作業。</p>
+        <button class="btn btn-upload" id="finalSubmitBtn" onclick="submitToCloud()">🚀 提交答案到雲端</button>
+    </div>
+
+</main>
+
+<footer>
+    <a href="3.html" class="nav-btn prev-btn">← 上一頁</a>
+    
+    <a href="./5.html" id="nextPageBtn" class="nav-btn next-btn disabled">下一頁 →</a>
+</footer>
+
+<div id="loadingMask">
+    <div class="spinner"></div>
+    <p style="margin-top:10px; font-weight:bold;">資料上傳中，請稍候...</p>
+</div>
+
+<script>
+    // ==========================================
+    // 您的 Google Apps Script 網址
+    // ==========================================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgWEmgf5BpYHedvz3x_fbL_2_h1TFW8AbFLbyzF7mdsKVLbH1wqQqqkQv4-dOxVh5J/exec'; 
+
+    // 追蹤回答狀態
+    const status = {
+        ans1: false,
+        ans2: false,
+        ans3: false
+    };
+
+    // 切換提示顯示
+    function toggleHint(id) {
+        const hint = document.getElementById(id);
+        if (hint.style.display === "block") {
+            hint.style.display = "none";
+        } else {
+            hint.style.display = "block";
+        }
+    }
+
+    // 暫存/標記該題完成
+    function tempSave(id) {
+        const textarea = document.getElementById(`ans${id}`);
+        const btn = document.getElementById(`btn${id}`);
+        const badge = document.getElementById(`badge${id}`);
+
+        if (textarea.value.trim().length > 0) {
+            status[`ans${id}`] = true;
+            
+            // 視覺回饋
+            btn.innerText = "修改答案";
+            btn.classList.remove('btn-temp-save');
+            btn.classList.add('btn-hint'); // 改為灰色樣式
+            badge.style.opacity = "1";
+            
+            checkAllAnswered();
+        } else {
+            alert("請先輸入您的想法再按完成喔！");
+        }
+    }
+
+    // 檢查是否全部回答完畢
+    function checkAllAnswered() {
+        if (status.ans1 && status.ans2 && status.ans3) {
+            const section = document.getElementById('submitSection');
+            section.style.display = 'block';
+            // 自動滾動到提交區
+            section.scrollIntoView({behavior: "smooth"});
+        }
+    }
+
+    // 提交到雲端
+    function submitToCloud() {
+        // 1. 取得資料
+        const cls = document.getElementById('studentClass').value.trim();
+        const seat = document.getElementById('studentSeat').value.trim();
+        const name = document.getElementById('studentName').value.trim();
+        const ans1 = document.getElementById('ans1').value.trim();
+        const ans2 = document.getElementById('ans2').value.trim();
+        const ans3 = document.getElementById('ans3').value.trim();
+
+        // 2. 基本驗證
+        if (!cls || !seat || !name) {
+            alert("請務必填寫頁面上方的「班級、座號、姓名」才能提交喔！");
+            document.querySelector('.student-info').scrollIntoView({behavior: "smooth"});
+            return;
+        }
+
+        // 3. 鎖定按鈕與顯示 Loading
+        document.getElementById('loadingMask').style.display = 'flex';
+        const submitBtn = document.getElementById('finalSubmitBtn');
+        submitBtn.disabled = true;
+
+        // 4. 打包資料
+        const payload = {
+            className: cls,
+            seatNo: seat,
+            studentName: name,
+            ans1: ans1,
+            ans2: ans2,
+            ans3: ans3
+        };
+
+        // 5. 發送 POST 請求
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingMask').style.display = 'none';
+            if (data.result === 'success') {
+                alert("提交成功！作業已上傳到雲端。");
+                submitBtn.innerText = "已提交";
+                
+                // 解鎖下一頁按鈕
+                document.getElementById('nextPageBtn').classList.remove('disabled');
+            } else {
+                alert("上傳失敗，請稍後再試。\n錯誤訊息：" + JSON.stringify(data));
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            document.getElementById('loadingMask').style.display = 'none';
+            console.error('Error:', error);
+            alert("發生連線錯誤，請檢查網路或聯繫老師。");
+            submitBtn.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>

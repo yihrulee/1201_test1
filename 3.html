@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物的運輸 - 樹皮與年輪</title>
+    <style>
+        :root {
+            --primary-green: #2e5c3e;
+            --secondary-green: #4a7c59;
+            --highlight-bark: #c05621;   /* 樹皮/韌皮部 - 橙褐 */
+            --highlight-wood: #2c5282;   /* 木質部/木材 - 深藍 */
+            --highlight-season: #059669; /* 季節/生長 - 翠綠 */
+            --bg-color: #fdfbfb;
+            --correct-bg: #d1e7dd;
+            --correct-border: #0f5132;
+            --incorrect-bg: #f8d7da;
+            --incorrect-border: #842029;
+            --disabled-gray: #ccc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: #333;
+            line-height: 1.8;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 頂部標題 */
+        header {
+            background: var(--primary-green);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        /* 主要內容容器 */
+        main {
+            max-width: 960px;
+            width: 95%;
+            margin: 2rem auto;
+            flex: 1; 
+        }
+
+        /* 圖文區塊樣式 */
+        .content-row {
+            display: flex;
+            align-items: flex-start; /* 頂部對齊 */
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            gap: 30px;
+        }
+
+        /* 手機版自動切換為垂直排列 */
+        @media (max-width: 768px) {
+            .content-row {
+                flex-direction: column;
+            }
+            .img-col {
+                order: -1; /* 圖片在手機版顯示在上方 (可選) */
+                width: 100%;
+            }
+        }
+
+        .text-col {
+            flex: 6;
+        }
+
+        .img-col {
+            flex: 4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .img-col img {
+            width: 100%;
+            height: auto;
+            max-height: 350px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            object-fit: contain;
+            background-color: #eee; /* 圖片載入前背景 */
+        }
+
+        h2 {
+            border-left: 5px solid var(--secondary-green);
+            padding-left: 10px;
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        /* 關鍵字高亮樣式 */
+        .kw-bark { color: var(--highlight-bark); font-weight: bold; }
+        .kw-wood { color: var(--highlight-wood); font-weight: bold; }
+        .kw-season { color: var(--highlight-season); font-weight: bold; }
+        
+        /* 互動題目區塊 */
+        .quiz-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px dashed #ddd;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-green);
+            font-size: 1.8rem;
+        }
+
+        .quiz-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .quiz-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .options label {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #fafafa;
+            border: 1px solid transparent;
+        }
+        
+        .options label:hover {
+            background-color: #f0f0f0;
+            border-color: #ddd;
+        }
+
+        select {
+            padding: 5px 10px;
+            font-size: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: white;
+            margin: 0 5px;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .btn-check {
+            background-color: var(--primary-green);
+            color: white;
+        }
+        .btn-check:disabled {
+            background-color: var(--disabled-gray);
+            cursor: not-allowed;
+        }
+
+        .btn-retry {
+            background-color: #6c757d;
+            color: white;
+            display: none;
+            margin-left: 10px;
+        }
+
+        /* 回饋區塊 */
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .correct {
+            border-color: var(--correct-border);
+            background-color: var(--correct-bg);
+        }
+        .correct .feedback {
+            display: block;
+            color: var(--correct-border);
+            background-color: rgba(255,255,255,0.6);
+        }
+
+        .incorrect {
+            border-color: var(--incorrect-border);
+            background-color: var(--incorrect-bg);
+        }
+        .incorrect .feedback {
+            display: block;
+            color: var(--incorrect-border);
+            background-color: rgba(255,255,255,0.6);
+        }
+
+        /* 底部導覽列 */
+        footer {
+            background: #fff;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #ddd;
+            position: sticky;
+            bottom: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .prev-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        .prev-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .next-btn {
+            background-color: var(--primary-green);
+            color: white;
+            box-shadow: 0 4px 10px rgba(46, 92, 62, 0.3);
+        }
+        .next-btn:hover {
+            transform: translateY(-2px);
+            background-color: #244a32;
+        }
+
+        .next-btn.disabled {
+            background-color: var(--disabled-gray);
+            pointer-events: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>植物的運輸 - 樹皮與年輪</h1>
+</header>
+
+<main>
+    <section class="content-row">
+        <div class="text-col">
+            <h2>樹皮與木材的形成</h2>
+            <p>
+                <span class="kw-bark">樹皮</span>是樹幹的保護層，包含<span class="kw-bark">韌皮部</span>及其外圍構造。
+                當樹木逐年成長，<span class="kw-wood">形成層</span>內側的<span class="kw-wood">木質部</span>會逐漸堆積形成<span class="kw-wood">木材</span>。
+                （這就是為什麼樹幹中心都是木材，而具有運輸養分功能的韌皮部只在最外圈的原因）。
+            </p>
+        </div>
+        <div class="img-col">
+            <img src="3_1.png" alt="樹皮與內部構造示意圖 (請確保 3_1.png 存在)">
+        </div>
+    </section>
+
+    <section class="content-row">
+        <div class="text-col">
+            <h2>年輪的奧秘</h2>
+            <p>
+                <span class="kw-season">春、夏</span>氣候溫暖，雨量豐富，細胞生長速度<span class="kw-season">較快</span>，
+                使得此時所長出的木質部<span class="kw-season">細胞比較大</span>，形成的木材<span class="kw-season">顏色比較淺</span>；
+            </p>
+            <p>
+                到了<span class="kw-season">秋、冬</span>，氣候寒冷乾燥，細胞生長速度<span class="kw-season">較慢</span>，
+                使得此時所長出的木質部<span class="kw-season">細胞比較小</span>，形成的木材<span class="kw-season">顏色比較深</span>。
+            </p>
+            <p>
+                隨著一年四季的更迭，在樹幹、樹枝的橫切面，會形成<span class="kw-season">深、淺對比明顯的環紋</span>，稱為<span class="kw-wood">年輪</span>。
+            </p>
+        </div>
+        <div class="img-col">
+            <img src="3_2.png" alt="年輪深淺紋路示意圖 (請確保 3_2.png 存在)">
+        </div>
+    </section>
+
+    <section class="content-row">
+        <div class="text-col">
+            <h2>樹皮受損與中空神木</h2>
+            <p>
+                南投縣溪頭有些柳杉的<span class="kw-bark">樹皮</span>被松鼠啃食，造成柳杉樹枝死亡。
+                這是由於樹皮包含<span class="kw-bark">韌皮部</span>，當樹皮遭松鼠啃食一圈之後，<span class="kw-bark">韌皮部遭到破壞</span>，
+                <span class="kw-bark">養分無法運送到根部</span>，使<span class="kw-wood">根部因缺乏養分而壞死</span>，進而失去吸收水分的功能，於是造成柳杉枝葉枯黃而死亡。
+            </p>
+            <p>
+                而神木中心的部分是<span class="kw-wood">不具運輸功能的老化木質部</span>，所以即使樹幹中空仍可以存活，在大自然中也可看見樹幹中空卻仍然生長的樹木。
+            </p>
+        </div>
+        <div class="img-col">
+            <img src="3_3.png" alt="樹皮受損示意圖 (請確保 3_3.png 存在)">
+        </div>
+    </section>
+
+    <section class="quiz-section">
+        <h2 class="section-title">觀念挑戰</h2>
+        <p style="text-align: center; margin-bottom: 30px;">完成以下 4 題挑戰，即可解鎖下一章節。</p>
+
+        <div class="quiz-card" id="q1">
+            <span class="quiz-title">1. 松鼠啃食柳杉樹皮一圈後，樹木死亡的主要順序為何？</span>
+            <div class="options">
+                <label><input type="radio" name="q1" value="A" onchange="enableCheck('q1')"> A. 水分無法上升 -> 葉子枯死 -> 根部死亡</label>
+                <label><input type="radio" name="q1" value="B" onchange="enableCheck('q1')"> B. 韌皮部受損 -> 根部得不到養分而死 -> 無法吸水 -> 整株死亡</label>
+                <label><input type="radio" name="q1" value="C" onchange="enableCheck('q1')"> C. 形成層受損 -> 無法產生新細胞 -> 樹木停止生長</label>
+            </div>
+            <button class="btn btn-check" id="btn-q1" onclick="checkAnswer('q1', 'B')" disabled>檢查答案</button>
+            <button class="btn btn-retry" id="retry-q1" onclick="retryQuestion('q1')">重做本題</button>
+            <div class="feedback" id="fb-q1"></div>
+        </div>
+
+        <div class="quiz-card" id="q2">
+            <span class="quiz-title">2. 請比較不同季節生長的木質部特徵：</span>
+            <div class="options" style="line-height: 2.2;">
+                1. 春夏氣候溫暖，細胞生長快，細胞體積
+                <select id="q2-s1" onchange="enableCheck('q2')">
+                    <option value="">?</option>
+                    <option value="L">較大</option>
+                    <option value="S">較小</option>
+                </select>
+                ，顏色較淺。<br>
+                2. 秋冬氣候寒冷，細胞生長慢，細胞體積
+                <select id="q2-s2" onchange="enableCheck('q2')">
+                    <option value="">?</option>
+                    <option value="L">較大</option>
+                    <option value="S">較小</option>
+                </select>
+                ，顏色較深。
+            </div>
+            <button class="btn btn-check" id="btn-q2" onclick="checkQ2()" disabled>檢查答案</button>
+            <button class="btn btn-retry" id="retry-q2" onclick="retryQuestion('q2')">重做本題</button>
+            <div class="feedback" id="fb-q2"></div>
+        </div>
+
+        <div class="quiz-card" id="q3">
+            <span class="quiz-title">3. 樹幹中心的木材若腐朽中空，樹木一定會立刻死亡，因為無法輸送水分。(是非題)</span>
+            <div class="options">
+                <label><input type="radio" name="q3" value="T" onchange="enableCheck('q3')"> O (正確)</label>
+                <label><input type="radio" name="q3" value="F" onchange="enableCheck('q3')"> X (錯誤)</label>
+            </div>
+            <button class="btn btn-check" id="btn-q3" onclick="checkAnswer('q3', 'F')" disabled>檢查答案</button>
+            <button class="btn btn-retry" id="retry-q3" onclick="retryQuestion('q3')">重做本題</button>
+            <div class="feedback" id="fb-q3"></div>
+        </div>
+
+        <div class="quiz-card" id="q4">
+            <span class="quiz-title">4. 為什麼樹皮被環剝後會影響養分運輸，而不是水分運輸？</span>
+            <div class="options">
+                <label><input type="radio" name="q4" value="A" onchange="enableCheck('q4')"> A. 因為運輸水分的木質部在樹幹內部，未被破壞</label>
+                <label><input type="radio" name="q4" value="B" onchange="enableCheck('q4')"> B. 因為樹皮只負責保護，不負責運輸</label>
+                <label><input type="radio" name="q4" value="C" onchange="enableCheck('q4')"> C. 因為水分是透過韌皮部運輸的</label>
+            </div>
+            <button class="btn btn-check" id="btn-q4" onclick="checkAnswer('q4', 'A')" disabled>檢查答案</button>
+            <button class="btn btn-retry" id="retry-q4" onclick="retryQuestion('q4')">重做本題</button>
+            <div class="feedback" id="fb-q4"></div>
+        </div>
+
+    </section>
+</main>
+
+<footer>
+    <a href="2.html" class="nav-btn prev-btn">← 上一頁</a>
+    
+    <a href="./4.html" id="nextPageBtn" class="nav-btn next-btn disabled">下一頁 →</a>
+</footer>
+
+<script>
+    // 狀態追蹤
+    const status = {
+        q1: false,
+        q2: false,
+        q3: false,
+        q4: false
+    };
+
+    // 啟用檢查按鈕
+    function enableCheck(qId) {
+        document.getElementById(`btn-${qId}`).disabled = false;
+    }
+
+    // 檢查全對解鎖下一頁
+    function updateNextButton() {
+        const allCorrect = Object.values(status).every(v => v === true);
+        const nextBtn = document.getElementById('nextPageBtn');
+        
+        if (allCorrect) {
+            nextBtn.classList.remove('disabled');
+        } else {
+            nextBtn.classList.add('disabled');
+        }
+    }
+
+    // 通用檢查函式 (Q1, Q3, Q4)
+    function checkAnswer(qId, correctVal) {
+        const options = document.getElementsByName(qId);
+        let userVal = null;
+        for (let op of options) {
+            if (op.checked) userVal = op.value;
+        }
+
+        const card = document.getElementById(qId);
+        const feedback = document.getElementById(`fb-${qId}`);
+        const btnCheck = document.getElementById(`btn-${qId}`);
+        const btnRetry = document.getElementById(`retry-${qId}`);
+
+        // 鎖定
+        btnCheck.disabled = true;
+        btnCheck.style.display = 'none';
+        options.forEach(op => op.disabled = true);
+
+        if (userVal === correctVal) {
+            card.classList.add('correct');
+            feedback.innerText = "答對了！觀念非常清楚。";
+            status[qId] = true;
+        } else {
+            card.classList.add('incorrect');
+            if(qId === 'q3') {
+                feedback.innerText = "答錯囉！提示：神木中心是老化的木質部，已失去運輸功能。";
+            } else {
+                feedback.innerText = "答錯囉！請再仔細閱讀上方文本，注意顏色標示的關鍵字。";
+            }
+            status[qId] = false;
+            btnRetry.style.display = 'inline-block';
+        }
+        updateNextButton();
+    }
+
+    // Q2 填充題檢查
+    function checkQ2() {
+        const v1 = document.getElementById('q2-s1').value; // 春夏: 大(L)
+        const v2 = document.getElementById('q2-s2').value; // 秋冬: 小(S)
+        
+        const card = document.getElementById('q2');
+        const feedback = document.getElementById('fb-q2');
+        const btnCheck = document.getElementById('btn-q2');
+        const btnRetry = document.getElementById('retry-q2');
+        const s1 = document.getElementById('q2-s1');
+        const s2 = document.getElementById('q2-s2');
+
+        btnCheck.disabled = true;
+        btnCheck.style.display = 'none';
+        s1.disabled = true;
+        s2.disabled = true;
+
+        if (v1 === 'L' && v2 === 'S') {
+            card.classList.add('correct');
+            feedback.innerText = "完全正確！春夏生長快細胞大，秋冬生長慢細胞小。";
+            status['q2'] = true;
+        } else {
+            card.classList.add('incorrect');
+            feedback.innerText = "有點可惜。提示：生長快 -> 空間大；生長慢 -> 空間擠壓變小。";
+            status['q2'] = false;
+            btnRetry.style.display = 'inline-block';
+        }
+        updateNextButton();
+    }
+
+    // 重做功能
+    function retryQuestion(qId) {
+        const card = document.getElementById(qId);
+        const feedback = document.getElementById(`fb-${qId}`);
+        const btnCheck = document.getElementById(`btn-${qId}`);
+        const btnRetry = document.getElementById(`retry-${qId}`);
+
+        card.classList.remove('correct', 'incorrect');
+        feedback.style.display = 'none';
+        btnRetry.style.display = 'none';
+        btnCheck.style.display = 'inline-block';
+        btnCheck.disabled = true;
+
+        if (qId === 'q2') {
+            const s1 = document.getElementById('q2-s1');
+            const s2 = document.getElementById('q2-s2');
+            s1.disabled = false;
+            s2.disabled = false;
+            s1.value = "";
+            s2.value = "";
+        } else {
+            const options = document.getElementsByName(qId);
+            options.forEach(op => {
+                op.disabled = false;
+                op.checked = false;
+            });
+        }
+        status[qId] = false;
+        updateNextButton();
+    }
+</script>
+
+</body>
+</html>

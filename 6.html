@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物的運輸 - 水分運輸</title>
+    <style>
+        :root {
+            --primary-green: #2e5c3e;
+            --secondary-green: #4a7c59;
+            --kw-water: #2b6cb0;      /* 水分/動力 - 藍色 */
+            --kw-structure: #d97706;  /* 構造 - 橘褐 */
+            --kw-mechanism: #059669;  /* 機制 - 綠色 */
+            --bg-color: #fdfbfb;
+            --correct-bg: #d1e7dd;
+            --correct-border: #0f5132;
+            --incorrect-bg: #f8d7da;
+            --incorrect-border: #842029;
+            --disabled-gray: #ccc;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: #333;
+            line-height: 1.8;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 頂部標題 */
+        header {
+            background: var(--primary-green);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 { margin: 0; font-size: 1.8rem; }
+
+        /* 主要內容容器 */
+        main {
+            max-width: 1000px;
+            width: 95%;
+            margin: 2rem auto;
+            flex: 1; 
+        }
+
+        /* 通用區塊樣式 */
+        .content-block {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        /* 彈性佈局 (左文右圖) */
+        .flex-row {
+            display: flex;
+            align-items: center; /* 垂直置中 */
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .flex-row { flex-direction: column; }
+            .img-side { width: 100% !important; }
+            .text-side { width: 100% !important; }
+        }
+
+        .text-side { flex: 6; }
+        .img-side {
+            flex: 4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .img-side img {
+            max-width: 100%;
+            height: auto;
+            max-height: 350px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            object-fit: contain;
+        }
+
+        /* 第三段專用 (圖在下) */
+        .column-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .column-layout img {
+            margin-top: 20px;
+            max-width: 80%;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        p {
+            font-size: 1.15rem;
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        /* 關鍵字高亮 */
+        .kw-water { color: var(--kw-water); font-weight: bold; }
+        .kw-structure { color: var(--kw-structure); font-weight: bold; }
+        .kw-mechanism { color: var(--kw-mechanism); font-weight: bold; }
+
+        /* 互動題目區塊 */
+        .quiz-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px dashed #ddd;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-green);
+            font-size: 1.6rem;
+        }
+
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .quiz-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .quiz-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .options label {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #fafafa;
+            border: 1px solid transparent;
+        }
+        .options label:hover {
+            background-color: #f0f0f0;
+            border-color: #ddd;
+        }
+
+        select {
+            padding: 8px; font-size: 1rem; border-radius: 4px;
+            border: 1px solid #ccc; width: 100%; margin-top: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px; border-radius: 6px; border: none;
+            cursor: pointer; font-size: 1rem; transition: background 0.2s;
+            margin-top: 15px; font-weight: bold; width: 100%;
+        }
+
+        .btn-check { background-color: var(--primary-green); color: white; }
+        .btn-check:disabled { background-color: var(--disabled-gray); cursor: not-allowed; }
+        
+        .btn-retry { background-color: #6c757d; color: white; display: none; }
+
+        .feedback {
+            margin-top: 15px; padding: 12px; border-radius: 6px;
+            font-weight: bold; display: none; font-size: 0.95rem;
+        }
+
+        .correct { border-color: var(--correct-border); background-color: var(--correct-bg); }
+        .correct .feedback { display: block; color: var(--correct-border); }
+
+        .incorrect { border-color: var(--incorrect-border); background-color: var(--incorrect-bg); }
+        .incorrect .feedback { display: block; color: var(--incorrect-border); }
+
+        /* Footer */
+        footer {
+            background: #fff; padding: 1.5rem; display: flex;
+            justify-content: space-between; align-items: center;
+            border-top: 1px solid #ddd; position: sticky; bottom: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100;
+        }
+        .nav-btn {
+            text-decoration: none; padding: 12px 24px; border-radius: 30px;
+            font-weight: bold; transition: all 0.3s;
+        }
+        .prev-btn { background-color: #f0f0f0; color: #333; border: 1px solid #ccc; }
+        .prev-btn:hover { background-color: #e0e0e0; }
+        .next-btn { background-color: var(--primary-green); color: white; box-shadow: 0 4px 10px rgba(46, 92, 62, 0.3); }
+        .next-btn:hover { transform: translateY(-2px); background-color: #244a32; }
+        .next-btn.disabled { background-color: var(--disabled-gray); pointer-events: none; box-shadow: none; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>植物的運輸 - 水分運輸</h1>
+</header>
+
+<main>
+
+    <!-- 第一段：水分吸收與運輸 (左文右圖 6_1) -->
+    <div class="content-block flex-row">
+        <div class="text-side">
+            <p>
+                植物自根部吸收水分後，利用維管束中的<span class="kw-structure">木質部</span>將水分自根部<span class="kw-water">往上運輸</span>至莖、葉和花；
+                除了水分之外，<span class="kw-water">礦物質</span>也由根部吸收向上運輸。
+            </p>
+        </div>
+        <div class="img-side">
+            <img src="6_1.png" alt="根部吸收示意圖">
+        </div>
+    </div>
+
+    <!-- 第二段：根毛與滲透作用 (全寬文字) -->
+    <div class="content-block">
+        <p>
+            根部的表皮細胞向外突出，形成<span class="kw-structure">根毛</span>，以增加吸收的<span class="kw-mechanism">表面積</span>，
+            水分藉由<span class="kw-mechanism">滲透作用</span>，擴散進入根部的維管束。
+        </p>
+    </div>
+
+    <!-- 第三段：蒸散作用 (上文下圖 6_2) -->
+    <div class="content-block column-layout">
+        <div style="width: 100%;">
+            <p>
+                植物根部吸收的水除供應細胞利用外，大部分變成水蒸氣由<span class="kw-structure">氣孔</span>散失，這種現象稱為<span class="kw-water">蒸散作用</span>。
+                根、莖和葉的<span class="kw-structure">木質部</span>上下連通，形成充滿水的細管，當水分由氣孔蒸散時，細管內的水會被<span class="kw-water">向上拉升</span>，
+                於是莖內的水上升至葉，同時根部的水也上升至莖，構成水分<span class="kw-water">由下往上</span>的運輸途徑。
+            </p>
+        </div>
+        <img src="6_2.png" alt="水分連續性與蒸散作用示意圖">
+    </div>
+
+    <!-- 第四段 + 第五段：蒸散動力與氣孔控制 (左側兩段文，右側一圖 6_3) -->
+    <div class="content-block flex-row">
+        <div class="text-side">
+            <p>
+                即使是高大的樹木，<span class="kw-water">蒸散作用</span>也是水分在木質部向上運輸的<span class="kw-water">主要動力來源</span>。
+                因此，水分也能由根部運送至樹木的頂端。
+            </p>
+            <hr style="border:0; border-top:1px dashed #ddd; margin: 15px 0;">
+            <p>
+                <span class="kw-structure">氣孔</span>是水分蒸散和氣體（氧氣與二氧化碳）出入葉片的主要通道，大多分布在葉片上，且氣孔由<span class="kw-mechanism">保衛細胞</span>控制開閉。
+                包圍氣孔的兩個保衛細胞因<span class="kw-mechanism">吸水而膨脹彎曲</span>，導致氣孔<span class="kw-mechanism">張開</span>；
+                反之，當保衛細胞水分移出時，氣孔則關閉。
+                氣孔通常在<span class="kw-mechanism">白天張開、晚上關閉</span>，因此白天的蒸散作用比較旺盛；
+                不過，當乾燥、缺水時，即使在白天，氣孔也會<span class="kw-mechanism">關閉</span>以減少水分的散失，避免植物失水過多。
+            </p>
+        </div>
+        <div class="img-side">
+            <img src="6_3.png" alt="氣孔開閉機制示意圖">
+        </div>
+    </div>
+
+    <!-- 互動練習區 -->
+    <section class="quiz-section">
+        <h2 class="section-title">挑戰站</h2>
+        
+        <div class="quiz-grid">
+            <!-- Q1: 單選題 (動力來源) -->
+            <div class="quiz-card" id="q1">
+                <div>
+                    <span class="quiz-title">1. 高大樹木將水分從根部輸送到樹頂，最主要的「動力來源」是什麼？</span>
+                    <div class="options">
+                        <label><input type="radio" name="q1" value="A" onchange="enableCheck('q1')"> A. 光合作用</label>
+                        <label><input type="radio" name="q1" value="B" onchange="enableCheck('q1')"> B. 蒸散作用</label>
+                        <label><input type="radio" name="q1" value="C" onchange="enableCheck('q1')"> C. 呼吸作用</label>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-check" id="btn-q1" onclick="checkAnswer('q1', 'B')" disabled>檢查答案</button>
+                    <button class="btn btn-retry" id="retry-q1" onclick="retryQuestion('q1')">重做本題</button>
+                    <div class="feedback" id="fb-q1"></div>
+                </div>
+            </div>
+
+            <!-- Q2: 是非題 (運輸方向) -->
+            <div class="quiz-card" id="q2">
+                <div>
+                    <span class="quiz-title">2. 植物體內水分的運輸方向，正常情況下主要是「由上往下」運送。(是非題)</span>
+                    <div class="options">
+                        <label><input type="radio" name="q2" value="T" onchange="enableCheck('q2')"> O (正確)</label>
+                        <label><input type="radio" name="q2" value="F" onchange="enableCheck('q2')"> X (錯誤)</label>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-check" id="btn-q2" onclick="checkAnswer('q2', 'F')" disabled>檢查答案</button>
+                    <button class="btn btn-retry" id="retry-q2" onclick="retryQuestion('q2')">重做本題</button>
+                    <div class="feedback" id="fb-q2"></div>
+                </div>
+            </div>
+
+            <!-- Q3: 選詞填空 (構造功能) -->
+            <div class="quiz-card" id="q3">
+                <div>
+                    <span class="quiz-title">3. 氣孔的開閉是由什麼細胞控制的？</span>
+                    <p style="font-size: 0.95rem; margin-bottom: 5px;">這兩個細胞吸水膨脹時，氣孔會張開。</p>
+                    <select id="q3-select" onchange="enableCheck('q3')">
+                        <option value="">請選擇構造名稱</option>
+                        <option value="A">表皮細胞</option>
+                        <option value="B">保衛細胞</option>
+                        <option value="C">葉肉細胞</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="btn btn-check" id="btn-q3" onclick="checkQ3()" disabled>檢查答案</button>
+                    <button class="btn btn-retry" id="retry-q3" onclick="retryQuestion('q3')">重做本題</button>
+                    <div class="feedback" id="fb-q3"></div>
+                </div>
+            </div>
+
+            <!-- Q4: 情境邏輯題 -->
+            <div class="quiz-card" id="q4">
+                <div>
+                    <span class="quiz-title">4. 在炎熱且缺水的夏日中午，為了避免失水過多，植物的氣孔通常會有什麼反應？</span>
+                    <div class="options">
+                        <label><input type="radio" name="q4" value="A" onchange="enableCheck('q4')"> A. 氣孔關閉</label>
+                        <label><input type="radio" name="q4" value="B" onchange="enableCheck('q4')"> B. 氣孔大開</label>
+                        <label><input type="radio" name="q4" value="C" onchange="enableCheck('q4')"> C. 氣孔無變化</label>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-check" id="btn-q4" onclick="checkAnswer('q4', 'A')" disabled>檢查答案</button>
+                    <button class="btn btn-retry" id="retry-q4" onclick="retryQuestion('q4')">重做本題</button>
+                    <div class="feedback" id="fb-q4"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <!-- 上一頁 -->
+    <a href="5.html" class="nav-btn prev-btn">← 上一頁</a>
+    
+    <!-- 下一頁 (預設 disabled) -->
+    <a href="./7.html" id="nextPageBtn" class="nav-btn next-btn disabled">下一頁 →</a>
+</footer>
+
+<script>
+    // 狀態追蹤
+    const status = {
+        q1: false,
+        q2: false,
+        q3: false,
+        q4: false
+    };
+
+    // 啟用檢查按鈕
+    function enableCheck(qId) {
+        document.getElementById(`btn-${qId}`).disabled = false;
+    }
+
+    // 更新下一頁按鈕
+    function updateNextButton() {
+        const allCorrect = Object.values(status).every(v => v === true);
+        const nextBtn = document.getElementById('nextPageBtn');
+        if (allCorrect) {
+            nextBtn.classList.remove('disabled');
+        } else {
+            nextBtn.classList.add('disabled');
+        }
+    }
+
+    // 通用檢查 (單選/是非)
+    function checkAnswer(qId, correctVal) {
+        const options = document.getElementsByName(qId);
+        let userVal = null;
+        for (let op of options) {
+            if (op.checked) userVal = op.value;
+        }
+
+        const card = document.getElementById(qId);
+        const feedback = document.getElementById(`fb-${qId}`);
+        const btnCheck = document.getElementById(`btn-${qId}`);
+        const btnRetry = document.getElementById(`retry-${qId}`);
+
+        btnCheck.disabled = true;
+        btnCheck.style.display = 'none';
+        options.forEach(op => op.disabled = true);
+
+        if (userVal === correctVal) {
+            card.classList.add('correct');
+            feedback.innerText = "答對了！觀念非常清晰。";
+            status[qId] = true;
+        } else {
+            card.classList.add('incorrect');
+            if (qId === 'q2') feedback.innerText = "答錯囉！水分是「由下往上」（根→莖→葉）運輸的。";
+            else feedback.innerText = "答錯囉！請參考上方文本與圖片的重點標示。";
+            status[qId] = false;
+            btnRetry.style.display = 'inline-block';
+        }
+        updateNextButton();
+    }
+
+    // Q3 下拉選單檢查
+    function checkQ3() {
+        const select = document.getElementById('q3-select');
+        const userVal = select.value;
+        
+        const card = document.getElementById('q3');
+        const feedback = document.getElementById('fb-q3');
+        const btnCheck = document.getElementById('btn-q3');
+        const btnRetry = document.getElementById('retry-q3');
+
+        btnCheck.disabled = true;
+        btnCheck.style.display = 'none';
+        select.disabled = true;
+
+        if (userVal === 'B') { // 保衛細胞
+            card.classList.add('correct');
+            feedback.innerText = "完全正確！成對的保衛細胞控制氣孔開閉。";
+            status['q3'] = true;
+        } else {
+            card.classList.add('incorrect');
+            feedback.innerText = "有點可惜。表皮細胞通常沒有葉綠體，也不控制氣孔喔。";
+            status['q3'] = false;
+            btnRetry.style.display = 'inline-block';
+        }
+        updateNextButton();
+    }
+
+    // 重做功能
+    function retryQuestion(qId) {
+        const card = document.getElementById(qId);
+        const feedback = document.getElementById(`fb-${qId}`);
+        const btnCheck = document.getElementById(`btn-${qId}`);
+        const btnRetry = document.getElementById(`retry-${qId}`);
+
+        card.classList.remove('correct', 'incorrect');
+        feedback.style.display = 'none';
+        btnRetry.style.display = 'none';
+        btnCheck.style.display = 'inline-block';
+        btnCheck.disabled = true;
+
+        if (qId === 'q3') {
+            const select = document.getElementById('q3-select');
+            select.disabled = false;
+            select.value = "";
+        } else {
+            const options = document.getElementsByName(qId);
+            options.forEach(op => {
+                op.disabled = false;
+                op.checked = false;
+            });
+        }
+        status[qId] = false;
+        updateNextButton();
+    }
+</script>
+
+</body>
+</html>
