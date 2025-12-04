@@ -2,18 +2,20 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>內分泌系統配對測驗 (修正版)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>內分泌系統測驗 (自帶框框版)</title>
 <style>
   /* --- 基礎設定 --- */
   body {
     font-family: "Microsoft JhengHei", Arial, sans-serif;
     background-color: #f0f2f5;
     margin: 0;
-    padding: 20px;
+    padding: 10px;
     display: flex;
     justify-content: center;
     min-height: 100vh;
+    box-sizing: border-box;
+    overscroll-behavior: none; 
   }
 
   .main-container {
@@ -22,23 +24,24 @@
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    max-width: 1300px;
+    max-width: 1200px;
     width: 100%;
-    gap: 30px;
-    /* 關鍵修正：讓內容靠上對齊，防止高度被撐開 */
-    align-items: flex-start; 
+    gap: 20px;
+    align-items: flex-start;
+    flex-direction: row;
   }
 
   /* --- 左側：選項區 --- */
   .options-panel {
-    width: 220px;
+    width: 200px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     background: #f9f9f9;
-    padding: 15px;
+    padding: 10px;
     border-radius: 8px;
+    min-height: 300px; 
   }
 
   .options-header {
@@ -46,7 +49,7 @@
     font-weight: bold;
     text-align: center;
     border-bottom: 2px solid #0033cc;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
     margin-bottom: 5px;
   }
 
@@ -55,102 +58,116 @@
     color: #cc0000; 
     font-weight: bold;
     font-size: 16px;
-    padding: 10px 5px;
+    padding: 10px 4px;
     text-align: center;
     border: 2px solid #ddd;
     border-radius: 6px;
     cursor: grab;
     user-select: none;
+    touch-action: none; 
     box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.1s;
   }
 
-  .draggable-item:hover {
-    transform: translateY(-2px);
-    border-color: #aaa;
-  }
-  
+  /* 1. 電腦版拖曳中 */
   .draggable-item.dragging {
-    opacity: 0.5;
+    opacity: 0.4;
+    border: 2px dashed #999;
+    background-color: #eee;
+  }
+
+  /* 2. 手機版拖曳中 */
+  .draggable-item.touch-drag {
+    position: fixed;
+    z-index: 9999;
+    opacity: 0.9;
+    background-color: #ffe082;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    pointer-events: none; 
+    width: 150px; 
+    transform: scale(1.1); 
   }
 
   .draggable-item.matched {
     display: none; 
   }
 
-  /* --- 右側：圖片互動區 (關鍵修正) --- */
-  /* 使用 fit-content 確保容器緊貼圖片，不留白邊 */
+  /* --- 右側：圖片互動區 --- */
   .game-board {
     position: relative;
     width: 100%;
-    /* 這裡確保如果圖片沒載入，至少有個範圍 */
-    min-height: 500px; 
+    font-size: 0; 
   }
 
   .base-image {
     width: 100%;
-    display: block; /* 消除圖片底部預設的 3px 白邊 */
+    height: auto;
+    display: block;
     border-radius: 8px;
+    pointer-events: none;
+    /* 這裡你可以放去背後的圖 */
   }
 
-  /* --- 放置框框樣式 --- */
+  /* --- 放置框框樣式 (關鍵修改) --- */
   .drop-zone {
     position: absolute;
-    width: 20.5%; /* 根據底圖格子的寬度微調 */
-    height: 7.2%; /* 根據底圖格子的高度微調 */
+    width: 20.5%; 
+    height: 7.2%; 
     
-    /* === 除錯模式 (Debug Mode) === */
-    /* 如果對不準，紅框會幫你看清楚位置。確認沒問題後，把下面這行改成 border: none; */
-    border: 2px solid red; 
-    background-color: rgba(255, 0, 0, 0.1); 
+    /* === 這裡直接畫出框框 === */
+    background-color: #ffffff; /* 白底 */
+    border: 2px solid #333;    /* 黑框 (類似原本圖片的風格) */
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.1); /* 加一點點陰影更有立體感 */
     
     border-radius: 4px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.4vw; 
+    
+    /* 字體大小 */
+    font-size: clamp(10px, 1.4vw, 20px); 
     font-weight: bold;
-    color: transparent; 
+    color: transparent; /* 答對前文字透明 */
     z-index: 10;
     box-sizing: border-box; 
+    transition: background-color 0.2s, border-color 0.2s;
   }
 
-  /* 拖曳經過時 */
+  /* 拖曳經過時變色 */
   .drop-zone.drag-over {
-    background-color: rgba(255, 255, 0, 0.4);
+    background-color: #fff9c4; /* 淡淡的黃色 */
     border: 2px dashed #fbc02d;
+    transform: scale(1.02); /* 微微放大提示 */
   }
 
   /* 答對時的樣式 */
   .drop-zone.correct {
-    background-color: #fff;
-    color: #cc0000;
-    border: 2px solid #333; 
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    background-color: #ffffff;
+    color: #cc0000; /* 紅字 */
+    border: 2px solid #4caf50; /* 變成綠框 (表示正確) */
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+    overflow: hidden;
+    white-space: nowrap;
   }
 
-  /* --- 座標微調 (針對 3.png) --- */
-  /* 左欄 X: 52% | 右欄 X: 77.2% */
+  /* --- 座標設定 --- */
+  /* 因為你自己畫框框，這裡的 top/left 很重要，請根據你的「無框底圖」微調 */
   
   /* 1. 腦垂腺 */
   #zone-gland-pituitary { top: 9.8%; left: 52%; }
   #zone-hormone-pituitary { top: 9.8%; left: 77.2%; }
-
   /* 2. 甲狀腺 */
   #zone-gland-thyroid { top: 22.2%; left: 52%; }
   #zone-hormone-thyroid { top: 22.2%; left: 77.2%; }
-
-  /* 3. 副甲狀腺 (中間那行) */
+  /* 3. 副甲狀腺 */
   #zone-gland-parathyroid { top: 52.5%; left: 52%; }
   #zone-hormone-parathyroid { top: 52.5%; left: 77.2%; }
-
   /* 4. 腎上腺 */
   #zone-gland-adrenal { top: 64.8%; left: 52%; }
   #zone-hormone-adrenal { top: 64.8%; left: 77.2%; }
-
   /* 5. 胰島 */
   #zone-gland-pancreas { top: 77.2%; left: 52%; }
   #zone-hormone-pancreas { top: 77.2%; left: 77.2%; }
-
   /* 6. 性腺 */
   #zone-gland-gonad { top: 89.5%; left: 52%; }
   #zone-hormone-gonad { top: 89.5%; left: 77.2%; }
@@ -160,35 +177,50 @@
   #success-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.9);
     display: none; 
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 50;
     border-radius: 8px;
+    text-align: center;
   }
   
   #success-overlay h2 {
     color: #4caf50;
-    font-size: 3em;
+    font-size: 2em;
     margin: 0 0 20px 0;
   }
   
   button.reset-btn {
-    padding: 12px 30px;
-    font-size: 1.2em;
+    padding: 10px 25px;
+    font-size: 1.1em;
     background-color: #2196f3;
     color: white;
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   }
 
+  /* --- 手機版調整 --- */
   @media (max-width: 800px) {
-    .main-container { flex-direction: column; align-items: center; }
-    .options-panel { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center;}
+    .main-container { 
+      flex-direction: column; 
+      align-items: center; 
+      padding: 10px;
+    }
+    .options-panel { 
+      width: 100%; 
+      flex-direction: row; 
+      flex-wrap: wrap; 
+      justify-content: center;
+    }
+    .draggable-item {
+      font-size: 14px;
+      padding: 8px 12px;
+      flex-grow: 1; 
+    }
   }
 </style>
 </head>
@@ -198,24 +230,23 @@
   
   <div class="options-panel" id="options-container">
     <div class="options-header">選項清單</div>
-    
-    <div class="draggable-item" draggable="true" data-type="gland" data-id="pituitary">腦垂腺</div>
-    <div class="draggable-item" draggable="true" data-type="gland" data-id="thyroid">甲狀腺</div>
-    <div class="draggable-item" draggable="true" data-type="gland" data-id="parathyroid">副甲狀腺</div>
-    <div class="draggable-item" draggable="true" data-type="gland" data-id="adrenal">腎上腺</div>
-    <div class="draggable-item" draggable="true" data-type="gland" data-id="pancreas">胰島</div>
-    <div class="draggable-item" draggable="true" data-type="gland" data-id="gonad">性腺</div>
+    <div class="draggable-item" data-type="gland" data-id="pituitary">腦垂腺</div>
+    <div class="draggable-item" data-type="gland" data-id="thyroid">甲狀腺</div>
+    <div class="draggable-item" data-type="gland" data-id="parathyroid">副甲狀腺</div>
+    <div class="draggable-item" data-type="gland" data-id="adrenal">腎上腺</div>
+    <div class="draggable-item" data-type="gland" data-id="pancreas">胰島</div>
+    <div class="draggable-item" data-type="gland" data-id="gonad">性腺</div>
 
-    <div class="draggable-item" draggable="true" data-type="hormone" data-id="pituitary">生長激素</div>
-    <div class="draggable-item" draggable="true" data-type="hormone" data-id="thyroid">甲狀腺素</div>
-    <div class="draggable-item" draggable="true" data-type="hormone" data-id="parathyroid">副甲狀腺素</div>
-    <div class="draggable-item" draggable="true" data-type="hormone" data-id="adrenal">腎上腺素</div>
-    <div class="draggable-item" draggable="true" data-type="hormone" data-id="pancreas">胰島素.升糖素</div>
-    <div class="draggable-item" draggable="true" data-type="hormone" data-id="gonad">雌雄性激素</div>
+    <div class="draggable-item" data-type="hormone" data-id="pituitary">生長激素</div>
+    <div class="draggable-item" data-type="hormone" data-id="thyroid">甲狀腺素</div>
+    <div class="draggable-item" data-type="hormone" data-id="parathyroid">副甲狀腺素</div>
+    <div class="draggable-item" data-type="hormone" data-id="adrenal">腎上腺素</div>
+    <div class="draggable-item" data-type="hormone" data-id="pancreas">胰島素.升糖素</div>
+    <div class="draggable-item" data-type="hormone" data-id="gonad">雌雄性激素</div>
   </div>
 
   <div class="game-board">
-    <img src="3.png" alt="內分泌系統底圖" class="base-image" ondragstart="return false;">
+    <img src="3.png" alt="內分泌系統底圖" class="base-image">
 
     <div class="drop-zone" id="zone-gland-pituitary" data-type="gland" data-id="pituitary"></div>
     <div class="drop-zone" id="zone-gland-thyroid" data-type="gland" data-id="thyroid"></div>
@@ -240,7 +271,7 @@
 </div>
 
 <script>
-  // 1. 亂數排序
+  // 保持之前修正後的完美 JS 邏輯 (包含手機觸控支援)
   const container = document.getElementById('options-container');
   const items = Array.from(container.querySelectorAll('.draggable-item'));
   items.sort(() => Math.random() - 0.5);
@@ -252,62 +283,110 @@
   
   let correctCount = 0;
   const totalItems = 12;
+  let currentDragItem = null;
 
-  // 2. 拖曳
-  draggables.forEach(elem => {
-    elem.addEventListener('dragstart', (e) => {
-      elem.classList.add('dragging');
+  draggables.forEach(item => {
+    item.setAttribute('draggable', true);
+    item.addEventListener('dragstart', (e) => {
+      currentDragItem = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', JSON.stringify({
-        id: elem.dataset.id,
-        type: elem.dataset.type,
-        text: elem.innerText
+        id: item.dataset.id, type: item.dataset.type
       }));
     });
-    elem.addEventListener('dragend', () => {
-      elem.classList.remove('dragging');
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      currentDragItem = null;
+    });
+    item.addEventListener('touchstart', (e) => {
+      if(e.touches.length === 1) {
+        currentDragItem = item;
+        item.classList.add('touch-drag');
+        const touch = e.touches[0];
+        moveElementToTouch(item, touch);
+      }
+    }, {passive: false});
+    item.addEventListener('touchmove', (e) => {
+      if(currentDragItem) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        moveElementToTouch(item, touch);
+        highlightZoneUnderTouch(touch.clientX, touch.clientY);
+      }
+    }, {passive: false});
+    item.addEventListener('touchend', (e) => {
+      if(currentDragItem) {
+        item.classList.remove('touch-drag');
+        item.style.position = ''; item.style.left = ''; item.style.top = ''; item.style.width = ''; item.style.transform = '';
+        const touch = e.changedTouches[0];
+        checkDrop(touch.clientX, touch.clientY);
+        currentDragItem = null;
+        dropZones.forEach(z => z.classList.remove('drag-over'));
+      }
     });
   });
 
-  // 3. 放置
+  function moveElementToTouch(elem, touch) {
+    elem.style.left = (touch.clientX - elem.offsetWidth / 2) + 'px';
+    elem.style.top = (touch.clientY - elem.offsetHeight / 2) + 'px';
+  }
+
+  function highlightZoneUnderTouch(x, y) {
+    dropZones.forEach(zone => zone.classList.remove('drag-over'));
+    if(currentDragItem) currentDragItem.style.display = 'none';
+    const elemBelow = document.elementFromPoint(x, y);
+    if(currentDragItem) currentDragItem.style.display = '';
+    if (!elemBelow) return;
+    const droppableBelow = elemBelow.closest('.drop-zone');
+    if (droppableBelow && !droppableBelow.classList.contains('correct')) {
+      droppableBelow.classList.add('drag-over');
+    }
+  }
+
+  function checkDrop(x, y) {
+    if(!currentDragItem) return;
+    currentDragItem.style.display = 'none';
+    const elemBelow = document.elementFromPoint(x, y);
+    currentDragItem.style.display = '';
+    if (!elemBelow) return;
+    const zone = elemBelow.closest('.drop-zone');
+    if (zone && !zone.classList.contains('correct')) {
+      validateMatch(zone, currentDragItem);
+    }
+  }
+
   dropZones.forEach(zone => {
     zone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      if (!zone.classList.contains('correct')) {
-        zone.classList.add('drag-over');
-      }
+      e.preventDefault(); 
+      if (!zone.classList.contains('correct')) zone.classList.add('drag-over');
     });
-    zone.addEventListener('dragleave', () => {
-      zone.classList.remove('drag-over');
-    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
     zone.addEventListener('drop', (e) => {
       e.preventDefault();
       zone.classList.remove('drag-over');
-      
-      const draggingElem = document.querySelector('.dragging');
-      if (!draggingElem || zone.classList.contains('correct')) return;
-
-      const dragId = draggingElem.dataset.id;
-      const dragType = draggingElem.dataset.type;
-      const zoneId = zone.dataset.id;
-      const zoneType = zone.dataset.type;
-
-      if (dragId === zoneId && dragType === zoneType) {
-        zone.innerText = draggingElem.innerText;
-        zone.classList.add('correct');
-        // 對齊後移除紅色除錯框 (可選)
-        zone.style.border = "2px solid #333"; 
-        
-        draggingElem.classList.add('matched');
-        
-        correctCount++;
-        if (correctCount === totalItems) {
-          setTimeout(() => {
-            successOverlay.style.display = 'flex';
-          }, 500);
-        }
-      }
+      if (currentDragItem && !zone.classList.contains('correct')) validateMatch(zone, currentDragItem);
     });
   });
+
+  function validateMatch(zone, item) {
+    const dragId = item.dataset.id;
+    const dragType = item.dataset.type;
+    const zoneId = zone.dataset.id;
+    const zoneType = zone.dataset.type;
+
+    if (dragId === zoneId && dragType === zoneType) {
+      zone.innerText = item.innerText;
+      zone.classList.add('correct');
+      // 答對時變綠框 (如果你想保持黑框，可以把這行 CSS 改掉)
+      item.classList.add('matched');
+      item.removeAttribute('draggable');
+      correctCount++;
+      if (correctCount === totalItems) {
+        setTimeout(() => successOverlay.style.display = 'flex', 300);
+      }
+    }
+  }
 </script>
 
 </body>
